@@ -20,7 +20,7 @@ import { If, Then, Else } from 'react-if';
 import { QueryStore } from './QueryStore';
 import SectionHeader from '../sectionHeader/SectionHeader';
 import { Modal } from 'react-bootstrap';
-import { getServerConfig } from 'config/config';
+import { getLoadConfig, getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from '../../../config/config';
 import { PAN_CAN_SIGNATURE } from './StudyListLogic';
 import QuickSelectButtons from './QuickSelectButtons';
@@ -32,6 +32,8 @@ import {
     getSampleCountsPerFilter,
     getStudyCountPerFilter,
 } from 'shared/components/query/filteredSearch/StudySearchControls';
+import { SingleSelectionDropdownFilter } from '../dropDownFilters/SingleSelectionDropDownFilter';
+import { useState } from 'react';
 const MIN_LIST_HEIGHT = 200;
 
 export interface ICancerStudySelectorProps {
@@ -278,7 +280,69 @@ export default class CancerStudySelector extends React.Component<
         const quickSetButtons = this.logic.mainView.quickSelectButtons(
             getServerConfig().skin_quick_select_buttons
         );
+        const [selectedTreatmentFilter, setSelectedTreatmentFilter] = useState<
+            string | null
+        >(null);
+        const [
+            selectedSourceSiteFilter,
+            setSelectedSourceSiteFilter,
+        ] = useState<string | null>(null);
+        const myHeaders = new Headers();
+        myHeaders.append('Content-Type', 'application/json');
+        myHeaders.append('Access-Control-Allow-Methods', 'GET');
+        myHeaders.append(
+            'Access-Control-Allow-Origin',
+            'https://wl2.dev2.gravity.invisibl.io'
+        );
 
+        const getTreatmentFilterData = async (selectedTreatmentItem: string) =>
+            await fetch(
+                `${
+                    getLoadConfig().extnUrl
+                }/api/studies/apply-filters?treatment=${selectedTreatmentItem}&filterType=byTreatment`,
+                {
+                    method: 'GET',
+                    headers: myHeaders,
+                }
+            )
+                .then(response => {
+                    console.log(response);
+                    return response.json();
+                })
+                .then(result => console.log(result))
+                .catch(error => console.error(error));
+        const getSourceSiteFilterData = async (
+            selectedSourceSiteItem: string
+        ) =>
+            await fetch(
+                `${
+                    getLoadConfig().extnUrl
+                }/api/studies/apply-filters?sourceSite=${selectedSourceSiteItem}&filterType=bySourceSite`,
+                {
+                    method: 'GET',
+                    headers: myHeaders,
+                }
+            )
+                .then(response => {
+                    console.log(response);
+                    return response.json();
+                })
+                .then(result => console.log(result))
+                .catch(error => console.error(error));
+        const handleTreatmentFilterChange = async (
+            selectedTreatmentItem: string
+        ) => {
+            setSelectedTreatmentFilter(selectedTreatmentItem);
+            await getTreatmentFilterData(selectedTreatmentItem);
+            // Additional actions when filter changes, if needed
+        };
+        const handleSourceSiteFilterChange = async (
+            selectedSourceSiteItem: string
+        ) => {
+            setSelectedSourceSiteFilter(selectedSourceSiteItem);
+            await getSourceSiteFilterData(selectedSourceSiteItem);
+            // Additional actions when filter changes, if needed
+        };
         return (
             <FlexCol
                 overflow
@@ -320,6 +384,48 @@ export default class CancerStudySelector extends React.Component<
 
                             return (
                                 <div>
+                                    <div
+                                        data-tour="data-type-filter"
+                                        data-test="data-type-filter-test"
+                                        style={{
+                                            display: 'inline-block',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <SingleSelectionDropdownFilter
+                                            buttonText={'Source Site'}
+                                            items={[
+                                                'University1',
+                                                'University2',
+                                                'University3',
+                                                'University4',
+                                            ]}
+                                            onFilterChange={
+                                                handleSourceSiteFilterChange
+                                            }
+                                        />
+                                    </div>
+                                    <div
+                                        data-tour="data-type-filter"
+                                        data-test="data-type-filter-test"
+                                        style={{
+                                            display: 'inline-block',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <SingleSelectionDropdownFilter
+                                            buttonText={'Treatment'}
+                                            items={[
+                                                'TMZ',
+                                                'TMZ + accutane',
+                                                'TMZ + thalidomide',
+                                                'CCNU + thalidomide',
+                                            ]}
+                                            onFilterChange={
+                                                handleTreatmentFilterChange
+                                            }
+                                        />
+                                    </div>
                                     <div
                                         data-tour="data-type-filter"
                                         data-test="data-type-filter-test"

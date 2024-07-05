@@ -239,7 +239,6 @@ export default class StudyList extends QueryStoreComponent<
                         );
                     }}
                 </Observer>
-
                 <Observer>
                     {() => {
                         return (

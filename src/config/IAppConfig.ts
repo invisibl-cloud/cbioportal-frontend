@@ -6,6 +6,7 @@ export interface IAppConfig {
     frontendUrl?: string;
     serverConfig: IServerConfig;
     hide_login?: boolean;
+    extnUrl?: string;
 }
 
 export interface ILoadConfig {
@@ -15,6 +16,7 @@ export interface ILoadConfig {
     configurationServiceUrl?: string;
     frontendUrl?: string;
     hide_login?: boolean;
+    extnUrl?: string;
 }
 
 export type CategorizedConfigItems = {

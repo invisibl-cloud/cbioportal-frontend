@@ -15,6 +15,7 @@ import { trackEvent } from 'shared/lib/tracking';
 import { If } from 'react-if';
 import { getServerConfig } from 'config/config';
 import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
+import ImportContainer from '../importContainer/ImportContainer';
 
 const DOWNLOAD = 'download';
 const ADVANCED = 'advanced';
@@ -167,6 +168,13 @@ export default class QueryAndDownloadTabs extends React.Component<
                             store={this.store}
                             showAlerts={this.props.showAlerts}
                         />
+                    </MSKTab>
+                    <MSKTab
+                        id={'import'}
+                        linkText={'Import'}
+                        onTabDidMount={() => this.setDefaultTab('import')}
+                    >
+                        <ImportContainer />
                     </MSKTab>
                 </MSKTabs>
             </div>

@@ -297,7 +297,8 @@ export function initializeLoadConfiguration() {
         `//${win.location.host}/`;
 
     const basePath = getBrowserWindow().frontendConfig.basePath;
-
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    const extnUrl = `${ENV_CBIOPORTAL_EXTN_URL}`;
     const configServiceUrl =
         getBrowserWindow().frontendConfig.configurationServiceUrl ||
         `${APIROOT}config_service`;
@@ -308,6 +309,7 @@ export function initializeLoadConfiguration() {
         basePath: basePath,
         frontendUrl: frontendUrl,
         baseUrl: BASEURL,
+        extnUrl: extnUrl,
     };
 
     setLoadConfig(loadConfig);

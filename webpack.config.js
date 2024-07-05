@@ -158,6 +158,11 @@ var config = {
                       cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)
                   )
                 : '"replace_me_env_genome_nexus_url"',
+            ENV_CBIOPORTAL_EXTN_URL: process.env.CBIOPORTAL_EXTN_URL
+                ? JSON.stringify(
+                      cleanAndValidateUrl(process.env.CBIOPORTAL_EXTN_URL)
+                  )
+                : '"replace_me_env_cbioportal_url"',
         }),
         new HtmlWebpackPlugin({ cache: false, template: 'my-index.ejs' }),
         new ProgressBarPlugin(),
