@@ -6,6 +6,8 @@ import './ImportContainer.css'; // Ensure you have this CSS file
 import { getLoadConfig } from 'config/config';
 
 export default function ImportContainer() {
+    const extn_base_Url =
+        'https://wl2.dev2.gravity.invisibl.io/scitools/ds1/apps/crbioportal-apiserver';
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [dragging, setDragging] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -50,7 +52,7 @@ export default function ImportContainer() {
             fileUploadElement.click();
         }
     };
-    console.log(`${getLoadConfig().extnUrl}/api/studies/upload`);
+    console.log(`${extn_base_Url}/api/studies/upload`);
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
 
@@ -69,7 +71,7 @@ export default function ImportContainer() {
 
         try {
             const response = await fetch(
-                `${getLoadConfig().extnUrl}/api/studies/upload`,
+                `${extn_base_Url}/api/studies/upload`,
                 {
                     method: 'POST',
                     body: formData,

@@ -272,6 +272,8 @@ export default class CancerStudySelector extends React.Component<
     }
 
     render() {
+        const extn_base_Url =
+            'https://wl2.dev2.gravity.invisibl.io/scitools/ds1/apps/crbioportal-apiserver';
         const {
             shownStudies,
             shownAndSelectedStudies,
@@ -299,9 +301,7 @@ export default class CancerStudySelector extends React.Component<
         myHeaders.append('Content-Type', 'application/json');
         const getTreatmentFilterOptions = async () =>
             await fetch(
-                `${
-                    getLoadConfig().extnUrl
-                }/api/studies/get-filters?filterType=byTreatment`
+                `${extn_base_Url}/api/studies/get-filters?filterType=byTreatment`
             )
                 .then(response => {
                     return response.json();
@@ -309,9 +309,7 @@ export default class CancerStudySelector extends React.Component<
                 .catch(err => console.log(err));
         const getSourceSiteFilterOptions = async () =>
             await fetch(
-                `${
-                    getLoadConfig().extnUrl
-                }/api/studies/get-filters?filterType=bySourceSite`
+                `${extn_base_Url}/api/studies/get-filters?filterType=bySourceSite`
             )
                 .then(response => {
                     return response.json();
@@ -321,17 +319,14 @@ export default class CancerStudySelector extends React.Component<
             selectedTreatment?: string[] | null,
             selectedSourceSite?: string[] | null
         ) =>
-            await fetch(
-                `${getLoadConfig().extnUrl}/api/studies/apply-filters`,
-                {
-                    method: 'POST',
-                    headers: myHeaders,
-                    body: JSON.stringify({
-                        treatment: selectedTreatment,
-                        sourceSite: selectedSourceSite,
-                    }),
-                }
-            )
+            await fetch(`${extn_base_Url}/api/studies/apply-filters`, {
+                method: 'POST',
+                headers: myHeaders,
+                body: JSON.stringify({
+                    treatment: selectedTreatment,
+                    sourceSite: selectedSourceSite,
+                }),
+            })
                 .then(response => {
                     return response.json();
                 })
