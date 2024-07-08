@@ -50,7 +50,7 @@ export default function ImportContainer() {
             fileUploadElement.click();
         }
     };
-    console.log(`${getLoadConfig().apiRoot}api/studies/upload`);
+    console.log(`${getLoadConfig().extnUrl}/api/studies/upload`);
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
 
@@ -69,7 +69,7 @@ export default function ImportContainer() {
 
         try {
             const response = await fetch(
-                `${getLoadConfig().apiRoot}api/studies/upload`,
+                `${getLoadConfig().extnUrl}/api/studies/upload`,
                 {
                     method: 'POST',
                     body: formData,

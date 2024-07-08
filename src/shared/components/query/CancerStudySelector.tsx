@@ -300,7 +300,7 @@ export default class CancerStudySelector extends React.Component<
         const getTreatmentFilterOptions = async () =>
             await fetch(
                 `${
-                    getLoadConfig().apiRoot
+                    getLoadConfig().extnUrl
                 }/api/studies/get-filters?filterType=byTreatment`
             )
                 .then(response => {
@@ -310,7 +310,7 @@ export default class CancerStudySelector extends React.Component<
         const getSourceSiteFilterOptions = async () =>
             await fetch(
                 `${
-                    getLoadConfig().apiRoot
+                    getLoadConfig().extnUrl
                 }/api/studies/get-filters?filterType=bySourceSite`
             )
                 .then(response => {
@@ -322,7 +322,7 @@ export default class CancerStudySelector extends React.Component<
             selectedSourceSite?: string[] | null
         ) =>
             await fetch(
-                `${getLoadConfig().apiRoot}/api/studies/apply-filters`,
+                `${getLoadConfig().extnUrl}/api/studies/apply-filters`,
                 {
                     method: 'POST',
                     headers: myHeaders,
