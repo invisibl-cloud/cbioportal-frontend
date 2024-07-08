@@ -124,6 +124,8 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                             style={{ marginRight: 2 }}
                                             defaultChecked={type.checked}
                                             onClick={() => {
+                                                // props.store.resetSourceFilter()
+                                                // props.store.resetTreatmentFilter()
                                                 type.checked = !type.checked;
                                                 props.store.dataTypeFilters = createDataTypeUpdate(
                                                     props.dataFilterActive!

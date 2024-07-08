@@ -33,7 +33,8 @@ import {
     getStudyCountPerFilter,
 } from 'shared/components/query/filteredSearch/StudySearchControls';
 import { SingleSelectionDropdownFilter } from '../dropDownFilters/SingleSelectionDropDownFilter';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { MultiSelectionDropdownFilter } from '../dropDownFilters/MulitSelectionDropDown';
 const MIN_LIST_HEIGHT = 200;
 
 export interface ICancerStudySelectorProps {
@@ -281,68 +282,141 @@ export default class CancerStudySelector extends React.Component<
             getServerConfig().skin_quick_select_buttons
         );
         const [selectedTreatmentFilter, setSelectedTreatmentFilter] = useState<
-            string | null
+            string[] | null
         >(null);
+        const [treatmentFilterOptions, setTreatmentFilterOptions] = useState<
+            string[]
+        >([]);
+        const [sourceSiteFilterOptions, setSourceSiteFilterOptions] = useState<
+            string[]
+        >([]);
+        const [studyLocalisedData, setStudyLocalisedData] = useState([]);
         const [
             selectedSourceSiteFilter,
             setSelectedSourceSiteFilter,
-        ] = useState<string | null>(null);
+        ] = useState<string[] | null>(null);
         const myHeaders = new Headers();
         myHeaders.append('Content-Type', 'application/json');
-        myHeaders.append('Access-Control-Allow-Methods', 'GET');
-        myHeaders.append(
-            'Access-Control-Allow-Origin',
-            'https://wl2.dev2.gravity.invisibl.io'
-        );
-
-        const getTreatmentFilterData = async (selectedTreatmentItem: string) =>
+        const getTreatmentFilterOptions = async () =>
             await fetch(
                 `${
-                    getLoadConfig().extnUrl
-                }/api/studies/apply-filters?treatment=${selectedTreatmentItem}&filterType=byTreatment`,
-                {
-                    method: 'GET',
-                    headers: myHeaders,
-                }
+                    getLoadConfig().apiRoot
+                }/api/studies/get-filters?filterType=byTreatment`
             )
                 .then(response => {
-                    console.log(response);
                     return response.json();
                 })
-                .then(result => console.log(result))
-                .catch(error => console.error(error));
-        const getSourceSiteFilterData = async (
-            selectedSourceSiteItem: string
+                .catch(err => console.log(err));
+        const getSourceSiteFilterOptions = async () =>
+            await fetch(
+                `${
+                    getLoadConfig().apiRoot
+                }/api/studies/get-filters?filterType=bySourceSite`
+            )
+                .then(response => {
+                    return response.json();
+                })
+                .catch(err => console.log(err));
+        const getTreatmentAndSourceSiteFilterData = async (
+            selectedTreatment?: string[] | null,
+            selectedSourceSite?: string[] | null
         ) =>
             await fetch(
-                `${
-                    getLoadConfig().extnUrl
-                }/api/studies/apply-filters?sourceSite=${selectedSourceSiteItem}&filterType=bySourceSite`,
+                `${getLoadConfig().apiRoot}/api/studies/apply-filters`,
                 {
-                    method: 'GET',
+                    method: 'POST',
                     headers: myHeaders,
+                    body: JSON.stringify({
+                        treatment: selectedTreatment,
+                        sourceSite: selectedSourceSite,
+                    }),
                 }
             )
                 .then(response => {
-                    console.log(response);
                     return response.json();
                 })
-                .then(result => console.log(result))
                 .catch(error => console.error(error));
+
+        // const getSourceSiteFilterData = async (
+        //     selectedSourceSiteItem: string[]
+        // ) =>
+        //     await fetch(
+        //         `${
+        //             getLoadConfig().apiRoot
+        //         }/api/studies/apply-filters?sourceSite=${selectedSourceSiteItem}&filterType=bySourceSite`,
+        //         {
+        //             method: 'GET',
+        //             headers: myHeaders,
+        //         }
+        //     )
+        //         .then(response => {
+        //             console.log(response);
+        //             return response.json();
+        //         })
+        //         .catch(error => console.error(error));
         const handleTreatmentFilterChange = async (
-            selectedTreatmentItem: string
+            selectedTreatmentItem: string[]
         ) => {
             setSelectedTreatmentFilter(selectedTreatmentItem);
-            await getTreatmentFilterData(selectedTreatmentItem);
-            // Additional actions when filter changes, if needed
+            try {
+                const data = await getTreatmentAndSourceSiteFilterData(
+                    selectedTreatmentItem,
+                    selectedSourceSiteFilter
+                ).then(({ data }) => {
+                    return data;
+                });
+
+                if (data) {
+                    setStudyLocalisedData(data);
+                    this.store.setTreatmentFilteredData(data);
+                } else {
+                    setStudyLocalisedData([]);
+                    this.store.setTreatmentFilteredData([]);
+                }
+            } catch (error) {
+                console.error('Failed to fetch treatment filter data:', error);
+            }
         };
         const handleSourceSiteFilterChange = async (
-            selectedSourceSiteItem: string
+            selectedSourceSiteItem: string[]
         ) => {
             setSelectedSourceSiteFilter(selectedSourceSiteItem);
-            await getSourceSiteFilterData(selectedSourceSiteItem);
-            // Additional actions when filter changes, if needed
+            const data = await getTreatmentAndSourceSiteFilterData(
+                selectedTreatmentFilter,
+                selectedSourceSiteItem
+            ).then(({ data }) => {
+                return data;
+            });
+            if (data) {
+                setStudyLocalisedData(data);
+                this.store.setSourceSiteFilteredData(data);
+            } else {
+                setStudyLocalisedData([]);
+                this.store.setSourceSiteFilteredData([]);
+            }
         };
+        const onResetTreatmentFilter = () => {
+            this.store.resetTreatmentFilter();
+        };
+        const onResetSourceFilter = () => {
+            this.store.resetSourceFilter();
+        };
+        useEffect(() => {
+            const fetchTreatmentOptions = async () => {
+                const { data } = await getTreatmentFilterOptions();
+                if (data) {
+                    setTreatmentFilterOptions(data?.treatment);
+                }
+            };
+            const fetchSourceSiteOptions = async () => {
+                const { data } = await getSourceSiteFilterOptions();
+                if (data) {
+                    setSourceSiteFilterOptions(data?.sourceSite);
+                }
+            };
+            fetchTreatmentOptions();
+            fetchSourceSiteOptions();
+        }, []);
         return (
             <FlexCol
                 overflow
@@ -392,17 +466,13 @@ export default class CancerStudySelector extends React.Component<
                                             alignItems: 'center',
                                         }}
                                     >
-                                        <SingleSelectionDropdownFilter
+                                        <MultiSelectionDropdownFilter
                                             buttonText={'Source Site'}
-                                            items={[
-                                                'University1',
-                                                'University2',
-                                                'University3',
-                                                'University4',
-                                            ]}
+                                            items={sourceSiteFilterOptions}
                                             onFilterChange={
                                                 handleSourceSiteFilterChange
                                             }
+                                            onReset={onResetSourceFilter}
                                         />
                                     </div>
                                     <div
@@ -413,17 +483,13 @@ export default class CancerStudySelector extends React.Component<
                                             alignItems: 'center',
                                         }}
                                     >
-                                        <SingleSelectionDropdownFilter
+                                        <MultiSelectionDropdownFilter
                                             buttonText={'Treatment'}
-                                            items={[
-                                                'TMZ',
-                                                'TMZ + accutane',
-                                                'TMZ + thalidomide',
-                                                'CCNU + thalidomide',
-                                            ]}
+                                            items={treatmentFilterOptions}
                                             onFilterChange={
                                                 handleTreatmentFilterChange
                                             }
+                                            onReset={onResetTreatmentFilter}
                                         />
                                     </div>
                                     <div

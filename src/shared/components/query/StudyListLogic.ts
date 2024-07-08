@@ -9,7 +9,7 @@ import {
     CancerStudy,
 } from 'cbioportal-ts-api-client';
 import { QueryStore } from './QueryStore';
-import { computed, action, makeObservable } from 'mobx';
+import { computed, action, makeObservable, toJS } from 'mobx';
 import { performSearchSingle } from '../../lib/query/textQueryUtils';
 import { cached } from 'cbioportal-frontend-commons';
 import { ServerConfigHelpers } from '../../../config/config';
@@ -88,16 +88,42 @@ export default class StudyListLogic {
     }
 
     @cached @computed get map_node_filtered_by_datatype() {
-        // Create a map with all the studies and set all to true (no filter applied)
+        const logObservableArray = (array: any[]) => {
+            return array.map(item => toJS(item));
+        };
+
+        const sourceSiteFilter = logObservableArray(
+            this.store.sourceSiteFilterData
+        );
+        const treatmentFilter = logObservableArray(
+            this.store.treatmentFilterData
+        );
         let map_node_filter = new Map<CancerTreeNode, boolean>();
         for (let node of this.store.treeData.map_node_meta.keys()) {
             map_node_filter.set(node, true);
         }
         let map_node_dataTypeResult = new Map<CancerTreeNode, boolean>();
-        for (let [node, meta] of this.store.treeData.map_node_meta.entries()) {
-            if (this.store.dataTypeFilters.length == 0) {
+        // Create a map with all the studies and set all to true (no filter applied)
+        if (
+            this.store.dataTypeFilters.length == 0 &&
+            sourceSiteFilter.length == 0 &&
+            treatmentFilter.length == 0
+        ) {
+            for (let [
+                node,
+                meta,
+            ] of this.store.treeData.map_node_meta.entries()) {
                 map_node_dataTypeResult.set(node, true);
-            } else {
+            }
+        } else if (
+            this.store.dataTypeFilters.length >= 0 &&
+            sourceSiteFilter.length <= 0 &&
+            treatmentFilter.length <= 0
+        ) {
+            for (let [
+                node,
+                meta,
+            ] of this.store.treeData.map_node_meta.entries()) {
                 let nodeStudy = this.store.cancerStudies.result.filter(
                     study => study.name === node.name
                 );
@@ -128,9 +154,202 @@ export default class StudyListLogic {
                         for (let cancerType of cancerTypes)
                             map_node_dataTypeResult.set(cancerType, true);
             }
+        } else if (
+            this.store.dataTypeFilters.length <= 0 &&
+            treatmentFilter.length >= 0 && sourceSiteFilter.length >= 0
+        ) {
+            for (let [
+                node,
+                meta,
+            ] of this.store.treeData.map_node_meta.entries()) {
+                treatmentFilter.map(d => {
+                    if (d.name === node.name) {
+                        map_node_dataTypeResult.set(node, true);
+                        if (!meta.isCancerType)
+                            for (let cancerTypes of [
+                                meta.ancestors,
+                                meta.priorityCategories,
+                            ])
+                                for (let cancerType of cancerTypes)
+                                    map_node_dataTypeResult.set(
+                                        cancerType,
+                                        true
+                                    );
+                    }
+                });
+                sourceSiteFilter.map(item => {
+                    if (item.name === node.name) {
+                        map_node_dataTypeResult.set(node, true);
+                        if (!meta.isCancerType)
+                            for (let cancerTypes of [
+                                meta.ancestors,
+                                meta.priorityCategories,
+                            ])
+                                for (let cancerType of cancerTypes)
+                                    map_node_dataTypeResult.set(
+                                        cancerType,
+                                        true
+                                    );
+                    }
+                });
+            }
+        } else {
+            for (let [
+                node,
+                meta,
+            ] of this.store.treeData.map_node_meta.entries()) {
+                let nodeStudy = this.store.cancerStudies.result.filter(
+                    study => study.name === node.name
+                );
+                let filterValue: boolean[] = [];
+                const keys = Object.keys(node) as (keyof typeof node)[];
+                const filterToApply = this.store.dataTypeFilters;
+                for (const filter in filterToApply) {
+                    for (const x in keys) {
+                        if (keys[x] === filterToApply[filter]) {
+                            Object.values(node)[x]! > 0
+                                ? filterValue.push(true)
+                                : filterValue.push(false);
+                        }
+                    }
+                }
+                const filterBoolean =
+                    filterValue.length == 0
+                        ? false
+                        : filterValue.every(v => v === true);
+                map_node_dataTypeResult.set(node, filterBoolean);
+
+                // include ancestors of matching studies
+                if (filterBoolean && !meta.isCancerType)
+                    for (let cancerTypes of [
+                        meta.ancestors,
+                        meta.priorityCategories,
+                    ])
+                        for (let cancerType of cancerTypes)
+                            map_node_dataTypeResult.set(cancerType, true);
+
+                treatmentFilter.map(d => {
+                    if (d.name === node.name) {
+                        map_node_dataTypeResult.set(node, true);
+                        if (!meta.isCancerType)
+                            for (let cancerTypes of [
+                                meta.ancestors,
+                                meta.priorityCategories,
+                            ])
+                                for (let cancerType of cancerTypes)
+                                    map_node_dataTypeResult.set(
+                                        cancerType,
+                                        true
+                                    );
+                    }
+                });
+                sourceSiteFilter.map(item => {
+                    if (item.name === node.name) {
+                        map_node_dataTypeResult.set(node, true);
+                        if (!meta.isCancerType)
+                            for (let cancerTypes of [
+                                meta.ancestors,
+                                meta.priorityCategories,
+                            ])
+                                for (let cancerType of cancerTypes)
+                                    map_node_dataTypeResult.set(
+                                        cancerType,
+                                        true
+                                    );
+                    }
+                });
+            }
         }
         return map_node_dataTypeResult;
     }
+    // @cached @computed get map_node_filtered_by_datatype() {
+    //     const logObservableArray = (array: any[]) => {
+    //         return array.map(item => toJS(item));
+    //     };
+
+    //     const sourceSiteFilter = logObservableArray(
+    //         this.store.sourceSiteFilterData
+    //     );
+    //     const treatmentFilter = logObservableArray(
+    //         this.store.treatmentFilterData
+    //     );
+
+    //     let map_node_filter = new Map<CancerTreeNode, boolean>();
+    //     for (let node of this.store.treeData.map_node_meta.keys()) {
+    //         map_node_filter.set(node, true);
+    //     }
+    //     let map_node_dataTypeResult = new Map<CancerTreeNode, boolean>();
+    //     for (let [node, meta] of this.store.treeData.map_node_meta.entries()) {
+    //         if (
+    //             this.store.dataTypeFilters.length == 0 &&
+    //             sourceSiteFilter.length <= 0 &&
+    //             treatmentFilter.length <= 0
+    //         ) {
+    //             map_node_dataTypeResult.set(node, true);
+    //         } else {
+    //             console.log(this.store.cancerStudies, 'dataaaa');
+    //             let nodeStudy =
+    //                 this.store.dataTypeFilters.length > 0
+    //                     ? this.store.cancerStudies.result.filter(
+    //                           study => study.name === node.name
+    //                       )
+    //                     : treatmentFilter.length > 0
+    //                     ? treatmentFilter.map((item, index) => {
+    //                           return this.store.cancerStudies.result.filter(
+    //                               (resultItem, index) => {
+    //                                   console.log(resultItem.name, item.name);
+    //                                   return resultItem.name === item.name;
+    //                               }
+    //                           );
+    //                       })
+    //                     : sourceSiteFilter?.length > 0
+    //                     ? treatmentFilter.map((item, index) => {
+    //                           return this.store.cancerStudies.result.filter(
+    //                               (resultItem, index) => {
+    //                                   console.log(resultItem.name, item.name);
+    //                                   return resultItem.name === item.name;
+    //                               }
+    //                           );
+    //                       })
+    //                     : [];
+
+    //             if (this.store.dataTypeFilters) {
+    //                 let filterValue: boolean[] = [];
+    //                 const keys = Object.keys(node) as (keyof typeof node)[];
+    //                 const filterToApply = this.store.dataTypeFilters;
+    //                 for (const filter in filterToApply) {
+    //                     for (const x in keys) {
+    //                         if (keys[x] === filterToApply[filter]) {
+    //                             Object.values(node)[x]! > 0
+    //                                 ? filterValue.push(true)
+    //                                 : filterValue.push(false);
+    //                         }
+    //                     }
+    //                 }
+    //                 const filterBoolean =
+    //                     filterValue.length == 0
+    //                         ? false
+    //                         : filterValue.every(v => v === true);
+    //                 map_node_dataTypeResult.set(node, filterBoolean);
+
+    //                 // include ancestors of matching studies
+    //                 if (filterBoolean && !meta.isCancerType)
+    //                     for (let cancerTypes of [
+    //                         meta.ancestors,
+    //                         meta.priorityCategories,
+    //                     ])
+    //                         for (let cancerType of cancerTypes)
+    //                             map_node_dataTypeResult.set(cancerType, true);
+    //                 return map_node_dataTypeResult;
+    //             } else if (
+    //                 treatmentFilter.length > 0 ||
+    //                 sourceSiteFilter.length > 0
+    //             ) {
+    //                 return nodeStudy.map(item => {});
+    //             }
+    //         }
+    //     }
+    // }
 
     @cached @computed get map_node_filterBySelectedCancerTypes() {
         let map_node_filter = new Map<CancerTreeNode, boolean>();

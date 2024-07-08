@@ -192,6 +192,16 @@ export class QueryStore {
     @observable deletedVirtualStudies: string[] = [];
 
     //to remove a virtual study from users list
+
+    @observable sourceSiteFilterData: object[] = [];
+    @observable treatmentFilterData: object[] = [];
+    // makeObservable(this, {
+    //             sourceSiteFilter: observable,
+    //             treatmentFilter: observable,
+    //             setSourceSiteFilter: action,
+    //             setTreatmentFilter: action,
+    //         });
+
     deleteVirtualStudy(id: string) {
         sessionServiceClient.deleteVirtualStudy(id).then(
             action(() => {
@@ -2116,6 +2126,21 @@ export class QueryStore {
 
     sanitizeQueryParams(str?: string) {
         return str ? decodeURIComponent(str).replace(/\+/g, '\n') : '';
+    }
+
+    @action setSourceSiteFilteredData(data: any[]) {
+        this.sourceSiteFilterData = data;
+    }
+    @action setTreatmentFilteredData(data: any[]) {
+        this.treatmentFilterData = data;
+    }
+
+    @action resetTreatmentFilter() {
+        this.treatmentFilterData = [];
+    }
+
+    @action resetSourceFilter() {
+        this.sourceSiteFilterData = [];
     }
 
     @action setParamsFromUrl(
