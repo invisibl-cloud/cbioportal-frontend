@@ -91,6 +91,7 @@ export default function ImportContainer() {
                     setError(false);
                     setUploadComplete(false);
                     setLoading(false);
+                    formData.delete('file');
                 }, 2000); // Adjust the delay as needed
             } else {
                 setMessage('File upload failed. Please try again.');
@@ -102,6 +103,7 @@ export default function ImportContainer() {
                     setSelectedFile(null);
                     setMessage('');
                     setError(false);
+                    formData.delete('file');
                 }, 2000); // Adjust the delay as needed
                 // alert('File upload failed. Please try again.');
             }
@@ -115,6 +117,7 @@ export default function ImportContainer() {
                 setSelectedFile(null);
                 setMessage('');
                 setError(false);
+                formData.delete('file');
             }, 2000); // Adjust the delay as needed
         }
     };

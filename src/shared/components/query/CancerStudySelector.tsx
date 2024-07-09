@@ -292,7 +292,9 @@ export default class CancerStudySelector extends React.Component<
         const [sourceSiteFilterOptions, setSourceSiteFilterOptions] = useState<
             string[]
         >([]);
-        const [studyLocalisedData, setStudyLocalisedData] = useState([]);
+        const [studyLocalisedData, setStudyLocalisedData] = useState<object[]>(
+            []
+        );
         const [
             selectedSourceSiteFilter,
             setSelectedSourceSiteFilter,
@@ -352,49 +354,90 @@ export default class CancerStudySelector extends React.Component<
         const handleTreatmentFilterChange = async (
             selectedTreatmentItem: string[]
         ) => {
+            selectedSourceSiteFilter && selectedSourceSiteFilter?.length > 0
+                ? this.store.setIsSourceFilter(true)
+                : (this.store.setIsSourceFilter(false),
+                  this.store.resetSourceFilter());
+            selectedTreatmentItem && selectedTreatmentItem?.length > 0
+                ? this.store.setIsTreatmentFilter(true)
+                : (this.store.setIsTreatmentFilter(false),
+                  this.store.resetTreatmentFilter());
             setSelectedTreatmentFilter(selectedTreatmentItem);
             try {
                 const data = await getTreatmentAndSourceSiteFilterData(
                     selectedTreatmentItem,
                     selectedSourceSiteFilter
-                ).then(({ data }) => {
-                    return data;
-                });
-
-                if (data) {
+                )
+                    .then(({ data }) => {
+                        return data;
+                    })
+                    .catch(err => {
+                        setStudyLocalisedData([]);
+                        this.store.resetTreatmentFilter();
+                        this.store.resetSourceFilter();
+                    });
+                if (data && data.length > 0) {
                     setStudyLocalisedData(data);
+                    this.store.resetSourceFilter();
                     this.store.setTreatmentFilteredData(data);
+                } else if (data && data.length <= 0) {
+                    setStudyLocalisedData([]);
+                    this.store.setTreatmentFilteredData([]);
+                    this.store.setSourceSiteFilteredData([]);
                 } else {
                     setStudyLocalisedData([]);
                     this.store.setTreatmentFilteredData([]);
+                    this.store.setSourceSiteFilteredData([]);
                 }
             } catch (error) {
                 console.error('Failed to fetch treatment filter data:', error);
             }
         };
         const handleSourceSiteFilterChange = async (
-            selectedSourceSiteItem: string[]
+            selectedSourceSiteItem: string[] | null
         ) => {
+            selectedSourceSiteItem && selectedSourceSiteItem?.length > 0
+                ? this.store.setIsSourceFilter(true)
+                : (this.store.setIsSourceFilter(false),
+                  this.store.resetSourceFilter());
+            selectedTreatmentFilter && selectedTreatmentFilter?.length > 0
+                ? this.store.setIsTreatmentFilter(true)
+                : (this.store.setIsTreatmentFilter(false),
+                  this.store.resetTreatmentFilter());
             setSelectedSourceSiteFilter(selectedSourceSiteItem);
             const data = await getTreatmentAndSourceSiteFilterData(
                 selectedTreatmentFilter,
                 selectedSourceSiteItem
-            ).then(({ data }) => {
-                return data;
-            });
-            if (data) {
+            )
+                .then(({ data }) => {
+                    return data;
+                })
+                .catch(err => {
+                    setStudyLocalisedData([]);
+                    this.store.resetIsTreatmentFilter();
+                    this.store.resetIsSourceFilter();
+                });
+            if (data && data.length > 0) {
                 setStudyLocalisedData(data);
+                this.store.resetTreatmentFilter();
                 this.store.setSourceSiteFilteredData(data);
+            } else if (data && data.length <= 0) {
+                setStudyLocalisedData([]);
+                this.store.setTreatmentFilteredData([]);
+                this.store.setSourceSiteFilteredData([]);
             } else {
                 setStudyLocalisedData([]);
+                this.store.setTreatmentFilteredData([]);
                 this.store.setSourceSiteFilteredData([]);
             }
         };
         const onResetTreatmentFilter = () => {
             this.store.resetTreatmentFilter();
+            this.store.resetIsTreatmentFilter();
         };
         const onResetSourceFilter = () => {
             this.store.resetSourceFilter();
+            this.store.resetIsSourceFilter();
         };
         useEffect(() => {
             const fetchTreatmentOptions = async () => {
@@ -486,6 +529,26 @@ export default class CancerStudySelector extends React.Component<
                                             }
                                             onReset={onResetTreatmentFilter}
                                         />
+                                    </div>
+                                    <div
+                                        data-tour="data-type-filter"
+                                        data-test="data-type-filter-test"
+                                        style={{
+                                            display: 'inline-block',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <div
+                                            data-test="dropdown-data-type-filter"
+                                            style={{
+                                                paddingRight: 5,
+                                                paddingBottom: '5px',
+                                            }}
+                                        >
+                                            <div className="input-group input-group-sm input-group-toggle">
+                                                OR
+                                            </div>
+                                        </div>
                                     </div>
                                     <div
                                         data-tour="data-type-filter"

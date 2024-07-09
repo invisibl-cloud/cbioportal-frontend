@@ -91,13 +91,23 @@ export default class StudyListLogic {
         const logObservableArray = (array: any[]) => {
             return array.map(item => toJS(item));
         };
-
         const sourceSiteFilter = logObservableArray(
             this.store.sourceSiteFilterData
         );
         const treatmentFilter = logObservableArray(
             this.store.treatmentFilterData
         );
+        const isFilterSelected =
+            this.store.isSourceFilter || this.store.isTreatmentFilter;
+        if (
+            isFilterSelected &&
+            sourceSiteFilter.length <= 0 &&
+            treatmentFilter.length <= 0 &&
+            this.store.dataTypeFilters.length <= 0
+        ) {
+            let map_node_dataTypeResult = new Map<CancerTreeNode, boolean>();
+            return map_node_dataTypeResult;
+        }
         let map_node_filter = new Map<CancerTreeNode, boolean>();
         for (let node of this.store.treeData.map_node_meta.keys()) {
             map_node_filter.set(node, true);
@@ -155,8 +165,9 @@ export default class StudyListLogic {
                             map_node_dataTypeResult.set(cancerType, true);
             }
         } else if (
-            this.store.dataTypeFilters.length <= 0 &&
-            treatmentFilter.length >= 0 && sourceSiteFilter.length >= 0
+            (this.store.dataTypeFilters.length <= 0 &&
+                treatmentFilter.length >= 0) ||
+            sourceSiteFilter.length >= 0
         ) {
             for (let [
                 node,

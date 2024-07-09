@@ -195,6 +195,8 @@ export class QueryStore {
 
     @observable sourceSiteFilterData: object[] = [];
     @observable treatmentFilterData: object[] = [];
+    @observable isTreatmentFilter: boolean = false;
+    @observable isSourceFilter: boolean = false;
     // makeObservable(this, {
     //             sourceSiteFilter: observable,
     //             treatmentFilter: observable,
@@ -2141,6 +2143,22 @@ export class QueryStore {
 
     @action resetSourceFilter() {
         this.sourceSiteFilterData = [];
+    }
+
+    @action setIsTreatmentFilter(value: boolean) {
+        this.isTreatmentFilter = value;
+    }
+
+    @action setIsSourceFilter(value: boolean) {
+        this.isSourceFilter = value;
+    }
+
+    @action resetIsTreatmentFilter() {
+        this.isTreatmentFilter = false;
+    }
+
+    @action resetIsSourceFilter() {
+        this.isSourceFilter = false;
     }
 
     @action setParamsFromUrl(
