@@ -99,6 +99,12 @@ export default class StudyListLogic {
         );
         const isFilterSelected =
             this.store.isSourceFilter || this.store.isTreatmentFilter;
+        if (!isFilterSelected && this.store.treatmentFilterData.length > 0) {
+            this.store.setTreatmentFilteredData([]);
+        }
+        if (!isFilterSelected && this.store.sourceSiteFilterData.length > 0) {
+            this.store.setSourceSiteFilteredData([]);
+        }
         if (
             isFilterSelected &&
             sourceSiteFilter.length <= 0 &&
